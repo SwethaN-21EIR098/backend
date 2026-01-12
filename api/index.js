@@ -1,46 +1,69 @@
-const create=require("../route/userRoute")
-const router=require("../route/Authrouter")
-const express = require("express")
-const mongoose  = require("mongoose")
-const dotenv = require("dotenv")
-const { errorHandler } = require("../manage/errorhandling")
-const{protect,authorize}=require("../middleware/Authmiddleware")
+const express = require("express");
+const mongoose = require("mongoose");
+
 const cors = require("cors");
-const app=express()
-dotenv.config()
-app.use(express.json())
+const User = require("../module/Authmodule");
+const dotenv = require("dotenv");
+
+dotenv.config();
+const app = express();
+
+// Middleware
+app.use(express.json());
 app.use(
   cors({
-    origin: process.env.CLIENT_URL,
+    origin: process.env.CLIENT_URL, // React dev server
     credentials: true,
   })
 );
-app.use("/tasks",router)
-app.use("/users",create)
-app.use(errorHandler); 
-app.get("/users", (req, res) => {
-  res.status(200).json([
-    { _id: "1", name: "Swetha", number: "12345" },
-    { _id: "2", name: "Alex", number: "67890" }
-  ]);
+
+// ===== Routes =====
+
+// Root test
+app.get("/", (req, res) => {
+  res.status(200).json({ message: "Backend running!" });
 });
 
+// Get all users
+app.get("/users", async (req, res) => {
+  try {
+    const users = await User.find();
+    res.status(200).json(users);
+  } catch (err) {
+    res.status(500).json({ message: "Failed to fetch users", error: err });
+  }
+});
 
-app.post("/about",(req,res)=>{
-    res.status(200).json({message:"creation"})
-})
-app.patch("/updation",(req,res)=>{
-    res.status(200).json({message:"updation"})
-})
-app.get("/",(req,res)=>{
-    res.status(200).json({mess:"port 5000"})
-})
+// Seed users (run once)
+app.get("/seed-users", async (req, res) => {
+  try {
+    const users = await User.insertMany([
+      { name: "Swetha", number: "12345" },
+      { name: "Alex", number: "67890" },
+      { name: "John", number: "11111" }
+    ]);
+    res.status(201).json(users);
+  } catch (err) {
+    res.status(500).json({ message: "Seed failed", error: err });
+  }
+});
 
+// Example POST and PATCH routes
+app.post("/about", (req, res) => {
+  res.status(200).json({ message: "creation" });
+});
+
+app.patch("/updation", (req, res) => {
+  res.status(200).json({ message: "updation" });
+});
+
+// ===== MongoDB connection =====
 mongoose.connect(process.env.MANGODB_URL)
-.then(()=>{
-    console.log("connected")
-})
-.catch(()=>{
-    console.log("error")
-})
+  .then(() => console.log("MongoDB connected"))
+  .catch((err) => console.error("MongoDB connection error:", err));
+
+// ===== Start server =====
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+
 module.exports = app;
