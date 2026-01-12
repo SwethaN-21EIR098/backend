@@ -36,3 +36,4 @@ mongoose.connect(process.env.MANGODB_URL)
 .catch(()=>{
     console.log("error")
 })
+module.exports = app;
