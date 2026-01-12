@@ -18,6 +18,13 @@ app.use(
 app.use("/tasks",router)
 app.use("/users",create)
 app.use(errorHandler); 
+app.get("/users", (req, res) => {
+  res.status(200).json([
+    { _id: "1", name: "Swetha", number: "12345" },
+    { _id: "2", name: "Alex", number: "67890" }
+  ]);
+});
+
 
 app.post("/about",(req,res)=>{
     res.status(200).json({message:"creation"})
